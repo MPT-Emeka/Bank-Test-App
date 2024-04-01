@@ -8,16 +8,15 @@ const nodemailer = require("nodemailer");
 const cookie = require("cookie-parser");
 
 //cookie-parser expiry date
-const maxAge = 3 * 24 * 60 * 60;
+const maxAge = 1 * 60 * 60; // cookie active session is 1 hour.
 
 //Create account for user
 exports.signUp = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, phoneNumber, role } = req.body;
-    if(!name && !email && !phoneNumber && !role && !password){
-      return res.status(400).json({error: 'All fields are required'})
+    const { name, address, email, password, confirmPassword, phoneNumber, dateOfBirth, bvn, nin, role } = req.body;
+    if(!name && !email && !phoneNumber && !password && !bvn){
+      return res.status(400).json({error: 'Compulsory fields are required'})
     }
- 
 
     if (password !== confirmPassword) {
       res.status(400).json({ message: "Passwords do not match" });
@@ -28,17 +27,21 @@ exports.signUp = async (req, res) => {
       const hash = await bcrypt.hash(password, salt);
       const user = await User.create({
         name,
+        address,
         email,
         password: hash,
         confirmPassword: hash,
         phoneNumber,
+        dateOfBirth,
+        bvn,
+        nin,
         role,
       });
 
       const token = createToken(user._id);
       res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
       await new Token({
-        userId: user._id,
+        userId: user._id, // check if this userId is not added, will it be autopopulated.
         token: token,
         createdAt: Date.now(),
       }).save();
@@ -55,8 +58,8 @@ exports.signUp = async (req, res) => {
     let mailOptions = {
         from : process.env.HOST_EMAIL,
         to : user.email,
-        subject : "User Sign-up",
-        text : `Thankyou ${user.name} for signing up for gulp drinks service.`
+        subject : "Account Creation",
+        text : `Thank you ${user.name} for creating an account with us`
     }
     
     mail.sendMail(mailOptions, function(error, info) {
@@ -77,7 +80,7 @@ exports.signUp = async (req, res) => {
     }
     return res
       .status(400)
-      .json({ message: "Password is less than 6 characters" });
+      .json({ message: "Password is less than 5 characters" });
   } catch (error) {
     const errors = handleError(error);
     return res.status(404).json({ errors });
@@ -238,21 +241,3 @@ exports.resetPasswordController = async (req, res, next) => {
     res.status(400).json({ "message": error });
   }
 };
-
-
-exports.deleteUser = async(req, res)=>{
-  try{
-    const deletedUser =  await User.findOneAndDelete({_id: req.user.id }); // check during postman test
-    if(!deletedUser){
-      await Token.findOneAndDelete({ userId : req.user.id});
-      return res.status(400).json({message: "unable to delete account"})
-    }
-    return res.status(200).json({
-      success: true,
-      message:"account deleted"
-    })
-  }
-  catch(error) {
-    res.status(500).json({ message: error });
-  }
-}
