@@ -62,6 +62,7 @@ exports.apply = async (req, res) => {
             tenor,
             repaymentDate : Date.getMonth() + tenor
         })
+        return res.status(201).json({message: "loan created successfully", note: loanCreate})
 
     } catch (err) {
         const error = ErrorHandler.handleErrors(err);

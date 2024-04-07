@@ -69,24 +69,6 @@ exports.getUser = async (req, res) => {
 };
 
 
-exports.createAccount = async (req, res) => {
-  try {
-    const user = req.user; // identify the user
-    const userId = user._id
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "unauthorized user" });
-    }
-
-    
-
-  } catch (error) {
-    
-  }
-}
-
-
 exports.deleteUser = async (request, response) => {  // will remove later
   try {
     const user = request.user

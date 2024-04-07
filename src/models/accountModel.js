@@ -5,6 +5,11 @@ const accountSchema = mongoose.Schema({
         required: true,
         ref: "user",
     },
+    accountClass: {
+        type: String,
+        required: [true, "accountClass required"],
+        enum: ["Savings", "Current"]
+    },
     accountBalance : {
         type : Number,
     },
